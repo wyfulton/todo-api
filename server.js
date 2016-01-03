@@ -55,12 +55,12 @@ app.get('/todos/:id', function(req, res) {
 app.post('/todos', function(req, res) {
 	var body = _.pick(req.body, 'description', 'completed');
 
-	db.sequelize.sync().then(function () {
-		db.todo.create({
-			description: body.query.description,
-			completed: body.query.completed
+	db.todo.create(body)
+		.then(function (todo) {
+			res.json(todo.toJSON());
+		}, function (e) {
+			res.status(400).json(e)
 		});
-	});
 
 	// if (!_.isBoolean(body.completed) || !_.isString(body.description) || body.description.trim().length === 0) { 
 	// 	return res.status(400).send();
