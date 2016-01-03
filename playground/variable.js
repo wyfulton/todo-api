@@ -14,9 +14,6 @@ function updatePerson (obj) {
 
 var array = [12, 90];
 
-function updateArray (arr) {
-	arr = [12, 43]
-}
 
 function updateArray2 (arr) {
 	arr.push(55);
