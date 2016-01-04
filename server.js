@@ -14,26 +14,32 @@ app.use(bodyParser.json());
 
 app.get('/todos', function(req, res) {
 
-	var queryParams = req.query;
-	var filteredTodos = todos;
+	var query = req.query;
+	var where = {};
 
-	if (queryParams.hasOwnProperty('completed') && queryParams.completed === "true") {
-		filteredTodos = _.where(filteredTodos, {
-			completed: true
-		})
-	} else if (queryParams.hasOwnProperty('completed') && queryParams.completed === "false") {
-		filteredTodos = _.where(filteredTodos, {
-			completed: false
-		})
+	if (query.hasOwnProperty('completed') && query.completed === "true") {
+		where.completed = true;
+	} else if (query.hasOwnProperty('completed') && query.completed === "false") {
+		where.completed = false;
 	}
 
-	if (queryParams.hasOwnProperty('q') && queryParams.q.length > 0) {
-		filteredTodos = _.filter(filteredTodos, function(todo) {
-			return todo.description.toLowerCase().indexOf(queryParams.q.toLowerCase()) > -1;
+	if (query.hasOwnProperty('q') && query.q.length > 0) {
+		where.description = {
+			$like: '%' + query.q + '%'
+		}
+	}
+
+	db.todo.findAll({
+			where: where
+		})
+		.then(function(todos) {
+			if (todos) {
+				res.json(todos);
+			}
+		})
+		.catch(function(e) {
+			res.status(500).send();
 		});
-	}
-
-	res.json(filteredTodos);
 })
 
 // GET by ID
@@ -42,25 +48,15 @@ app.get('/todos/:id', function(req, res) {
 	var todoID = parseInt(req.params.id, 10);
 
 	db.todo.findById(todoID)
-		.then(function (todo) {
-			if(!!todo){
+		.then(function(todo) {
+			if (todo) {
 				res.json(todo.toJSON())
 			} else {
-				res.status(404).send()
+				res.status(404).send(todo)
 			}
-		}, function (e) {
+		}, function(e) {
 			res.status(500).send();
 		});
-
-	// var matchToDo = _.findWhere(todos, {
-	// 	id: todoID
-	// });
-
-	// if (matchToDo) {
-	// 	res.json(matchToDo);
-	// } else {
-	// 	res.status(404).send();
-	// };
 });
 
 // POST
@@ -68,9 +64,9 @@ app.post('/todos', function(req, res) {
 	var body = _.pick(req.body, 'description', 'completed');
 
 	db.todo.create(body)
-		.then(function (todo) {
+		.then(function(todo) {
 			res.json(todo.toJSON());
-		}, function (e) {
+		}, function(e) {
 			res.status(400).json(e)
 		});
 
