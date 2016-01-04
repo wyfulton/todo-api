@@ -17,6 +17,7 @@ app.get('/todos', function(req, res) {
 	var query = req.query;
 	var where = {};
 
+	// validate query data
 	if (query.hasOwnProperty('completed') && query.completed === "true") {
 		where.completed = true;
 	} else if (query.hasOwnProperty('completed') && query.completed === "false") {
@@ -29,6 +30,7 @@ app.get('/todos', function(req, res) {
 		}
 	}
 
+	// find in database and return res
 	db.todo.findAll({
 			where: where
 		})
@@ -57,16 +59,6 @@ app.get('/todos/:id', function(req, res) {
 		}, function(e) {
 			res.status(500).send();
 		});
-
-	// var matchToDo = _.findWhere(todos, {
-	// 	id: todoID
-	// });
-
-	// if (matchToDo) {
-	// 	res.json(matchToDo);
-	// } else {
-	// 	res.status(404).send();
-	// };
 });
 
 // POST
@@ -87,19 +79,6 @@ app.delete('/todos/:id', function(req, res) {
 
 	var todoID = parseInt(req.params.id, 10);
 
-	// db.todo.findById(todoID)
-	// 	.then(function(todo) {
-	// 		if (todo) {
-	// 			todo.destroy();
-	// 			res.json(todo);
-	// 		} else {
-	// 			res.status(404);
-	// 		}
-	// 	})
-	// 	.catch(function(e) {
-	// 		res.status(500).send()
-	// 	})
-
 	db.todo.destroy({
 		where: {
 			id: todoID
@@ -115,55 +94,39 @@ app.delete('/todos/:id', function(req, res) {
 	.catch(function(e) {
 		res.status(500).send()
 	})
-
-// Old version
-
-	// var matchToDo = _.findWhere(todos, {
-	// 	id: todoID
-	// });
-
-	// if (matchToDo) {
-	// 	todos = _.without(todos, matchToDo);
-	// 	res.json(matchToDo);
-	// } else {
-	// 	return res.status(400).json({
-	// 		"error": "No todo found with that id"
-	// 	});
-	// }
-
-
-	// res.status(200).send();
-	// res.json(matchToDo);
 });
 
 // PUT
 app.put('/todos/:id', function(req, res) {
 
 	var todoID = parseInt(req.params.id, 10);
-	var matchToDo = _.findWhere(todos, {
-		id: todoID
-	});
+
 	var body = _.pick(req.body, 'description', 'completed');
-	var validAttributes = {};
+	var attributes = {};
 
-	if (!matchToDo) {
-		return res.status(404).send();
+	if (body.hasOwnProperty('completed')) {
+		attributes.completed = body.completed;
 	}
 
-	if (body.hasOwnProperty('completed') && _.isBoolean(body.completed)) {
-		validAttributes.completed = body.completed;
-	} else if (body.hasOwnProperty('completed')) {
-		return res.status(400).send();
-	}
+	if (body.hasOwnProperty('description')) {
+		attributes.description = body.description;
+	} 
 
-	if (body.hasOwnProperty('description') && _.isString(body.description) && body.description.trim().length === 0) {
-		validAttributes.description = body.description;
-	} else if (body.hasOwnProperty('description')) {
-		return res.status(400).send();
-	}
-
-	_.extend(matchToDo, validAttributes);
-	res.json(matchToDo);
+	db.todo.findById(todoID)
+		.then(function (todo) {
+			if (todo) {
+				return todo.update(attributes)
+			} else {
+				res.status(404).send();
+			}
+		}, function () {
+			res.status(500).send;
+		})
+		.then(function (todo) {
+			res.json(todo.toJSON());
+		}, function (e) {
+			res.status(400).send(e);
+		});
 
 });
 
