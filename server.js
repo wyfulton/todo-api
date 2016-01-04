@@ -57,6 +57,16 @@ app.get('/todos/:id', function(req, res) {
 		}, function(e) {
 			res.status(500).send();
 		});
+
+	// var matchToDo = _.findWhere(todos, {
+	// 	id: todoID
+	// });
+
+	// if (matchToDo) {
+	// 	res.json(matchToDo);
+	// } else {
+	// 	res.status(404).send();
+	// };
 });
 
 // POST
@@ -76,22 +86,54 @@ app.post('/todos', function(req, res) {
 app.delete('/todos/:id', function(req, res) {
 
 	var todoID = parseInt(req.params.id, 10);
-	var matchToDo = _.findWhere(todos, {
-		id: todoID
-	});
 
-	if (matchToDo) {
-		todos = _.without(todos, matchToDo);
-		res.json(matchToDo);
-	} else {
-		return res.status(400).json({
-			"error": "No todo found with that id"
-		});
-	}
+	// db.todo.findById(todoID)
+	// 	.then(function(todo) {
+	// 		if (todo) {
+	// 			todo.destroy();
+	// 			res.json(todo);
+	// 		} else {
+	// 			res.status(404);
+	// 		}
+	// 	})
+	// 	.catch(function(e) {
+	// 		res.status(500).send()
+	// 	})
+
+	db.todo.destroy({
+		where: {
+			id: todoID
+		}
+	})
+	.then(function (rowsDeleted) {
+		if (rowsDeleted === 0){
+			error: 'No todo with id';
+		} else {
+			res.status(204).send();
+		}
+	})
+	.catch(function(e) {
+		res.status(500).send()
+	})
+
+// Old version
+
+	// var matchToDo = _.findWhere(todos, {
+	// 	id: todoID
+	// });
+
+	// if (matchToDo) {
+	// 	todos = _.without(todos, matchToDo);
+	// 	res.json(matchToDo);
+	// } else {
+	// 	return res.status(400).json({
+	// 		"error": "No todo found with that id"
+	// 	});
+	// }
 
 
-	res.status(200).send();
-	res.json(matchToDo);
+	// res.status(200).send();
+	// res.json(matchToDo);
 });
 
 // PUT
