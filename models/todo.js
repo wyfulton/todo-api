@@ -1,20 +1,17 @@
 module.exports = function (sequelize, DataTypes) {
-	return sequelize.define('user', {
-		email: {
-			type: DataTypes.STRING,
-			allowNull: false,
-			unique: true,
-			validate: {
-				isEmail: true,
-			}
-		},
-		password: {
-			type: DataTypes.STRING,
-			allowNull: false,
-			validate: {
-				len: [1, 20]
-			}
+	return sequelize.define('todo', {
+	description: {
+		type: DataTypes.STRING,
+		allowNull: false,
+		validate: {
+			notEmpty: true,
+			len: [1, 250]
 		}
-	});
+	},
+	completed: {
+		type: DataTypes.BOOLEAN,
+		allowNull: false,
+		defaultValue: false
+	}
+});
 };
-
