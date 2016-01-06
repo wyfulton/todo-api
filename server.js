@@ -1,7 +1,8 @@
 var express = require('express');
 var bodyParser = require('body-parser');
 var _ = require('underscore');
-var db = require('./db.js')
+var db = require('./db.js');
+var bcrypt = require('bcrypt');
 
 var app = express();
 var PORT = process.env.PORT || 3000;
@@ -80,20 +81,20 @@ app.delete('/todos/:id', function(req, res) {
 	var todoID = parseInt(req.params.id, 10);
 
 	db.todo.destroy({
-		where: {
-			id: todoID
-		}
-	})
-	.then(function (rowsDeleted) {
-		if (rowsDeleted === 0){
-			error: 'No todo with id';
-		} else {
-			res.status(204).send();
-		}
-	})
-	.catch(function(e) {
-		res.status(500).send()
-	})
+			where: {
+				id: todoID
+			}
+		})
+		.then(function(rowsDeleted) {
+			if (rowsDeleted === 0) {
+				error: 'No todo with id';
+			} else {
+				res.status(204).send();
+			}
+		})
+		.catch(function(e) {
+			res.status(500).send()
+		})
 });
 
 // PUT
@@ -110,35 +111,47 @@ app.put('/todos/:id', function(req, res) {
 
 	if (body.hasOwnProperty('description')) {
 		attributes.description = body.description;
-	} 
+	}
 
 	db.todo.findById(todoID)
-		.then(function (todo) {
+		.then(function(todo) {
 			if (todo) {
 				return todo.update(attributes)
 			} else {
 				res.status(404).send();
 			}
-		}, function () {
+		}, function() {
 			res.status(500).send;
 		})
-		.then(function (todo) {
+		.then(function(todo) {
 			res.json(todo.toJSON());
-		}, function (e) {
+		}, function(e) {
 			res.status(400).send(e);
 		});
 
 });
 
-app.post('/users', function (req, res) {
+app.post('/users', function(req, res) {
 	var body = _.pick(req.body, 'email', 'password')
 
 	db.user.create(body)
-		.then(function (user) {
+		.then(function(user) {
 			res.json(user.toPublicJSON());
-		}, function (e) {
+		}, function(e) {
 			res.status(400).json(e);
 		})
+})
+
+app.post('/users/login', function (req, res) {
+	var body = _.pick(req.body, 'email', 'password')
+
+	db.user.authenticate(body).then(function (user) {
+		res.json(user.toPublicJSON());
+	}, function () {
+		res.status(401).send();
+	});
+
+
 })
 
 db.sequelize.sync().then(function() {
