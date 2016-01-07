@@ -7,7 +7,7 @@ module.exports = function (db) {
 				.then(function (user) {
 					req.user = user;
 					next();
-				}, function (argument) {
+				}, function () {
 					res.status(401).send();
 				})
 		}
